@@ -1,43 +1,22 @@
-const request = require('request')
+const geocode = require('./utils/geocode')
+const forecast = require('./utils/forecase')
 
-function getLatLong (location) {
-    const geocodeURL = `https://api.mapbox.com/geocoding/v5/mapbox.places/${location}.json?access_token=pk.eyJ1Ijoia2FuZ3RoZWtpc3MiLCJhIjoiY2p3Mjc2djZ5MDE4aDN5cXBuYmVocW1wbiJ9.nhx8Bl9ZcH60DDevQMxGzA`
+const address = process.argv[2]
 
-    request(geocodeURL, (err, res, body) => {
-        if(err) throw err
+if(!address) {
+    console.log('Please provide an address.')
+} else {
+    geocode(address, (error, { latitude, longitude, location }) => {
+        if(error) return console.log(error)
     
-        if(res.statusCode === 200){
-            const data = JSON.parse(body)
-            const latitude = data.features[0].center[1]
-            const longitude = data.features[0].center[0]
-            const placeName = data.features[0].place_name
-
-            console.log('location: ', placeName)
-            console.log('latitude: ', latitude)
-            console.log('longitude', longitude)
-
-            getWeather('si', latitude, longitude)
-        } else {
-            console.log('can not get lat long.')
-            console.log('http status code: ', res.statusCode)
-        }
+        const units = 'si'
+    
+        forecast(latitude, longitude, units, (error, forecastData) => {
+            if(error) return console.log(error)
+    
+            console.log(location)
+            console.log(forecastData)
+        })
     })
 }
 
-function getWeather(units = 'us', latitude, longitude) {
-    const weatherURL = `https://api.darksky.net/forecast/642b43cdcbc0d4990b6857c0effc5b45/${latitude},${longitude}?units=${units}`
-
-    request(weatherURL, (err, res, body) => {
-        if(err) throw err
-    
-        if(res.statusCode === 200) {
-            const data = JSON.parse(body)
-            console.log('temperature: ', data.currently.temperature)
-        } else {
-            console.log('can not get weather.')
-            console.log('http status code: ', res.statusCode)
-        }
-    })
-}
-
-getLatLong('usa')
