@@ -15,6 +15,24 @@ app.get('/', (req, res) => {
     })
 })
 
+app.get('/weather', (req, res) => {
+    res.send({
+        location: 'Thailand'
+    })
+})
+
+app.get('/products', (req, res) => {
+    if(!req.query.search) {
+        res.send({
+            error: 'You must provide a search term.'
+        })
+    }
+
+    res.send({
+        product: []
+    })
+})
+
 app.get('/about', (req, res) => {
     res.render('about', {
         text: 'About Page',
