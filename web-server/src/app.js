@@ -1,6 +1,10 @@
 const express = require('express')
 const path = require('path')
 const exphbs = require( 'express-handlebars');
+
+const geocode = require('./utils/geocode')
+const forecast = require('./utils/forecast')
+
 const app = express()
 
 //setup handlebars engine and views location
@@ -16,18 +20,41 @@ app.get('/', (req, res) => {
 })
 
 app.get('/weather', (req, res) => {
-    res.send({
-        location: 'Thailand'
+    let units = 'us'
+
+    const { address, newUnits } = req.query
+
+    if(!address) {
+        return res.send({
+            error: 'You must provide an address!'
+        })
+    }
+
+    if(newUnits) units = newUnits
+
+    geocode(address, (error, { latitude, longitude, location } = {}) => {
+        if(error) return res.send({error})
+
+        forecast(latitude, longitude, units, (error, forecaseData) => {
+            if(error) return res.send({error})
+
+            res.send({
+                forecast: forecaseData,
+                location: location,
+                address: address
+            })
+        })
     })
 })
 
 app.get('/products', (req, res) => {
     if(!req.query.search) {
-        res.send({
+        return res.send({
             error: 'You must provide a search term.'
         })
-    }
+    } 
 
+    console.log(req.query.search)
     res.send({
         product: []
     })
